@@ -43,3 +43,7 @@ print(f"\n✅ Đã ghi log tổng hợp : {summary_log}")
 # --- Ghi log JSON kèm dữ liệu dòng lỗi ---
 json_log = FileHelper.write_log_json(excel_file, all_objects, suffix="errors")
 print(f"✅ Đã ghi log JSON chi tiết: {json_log}")
+
+# --- Ghi log txt CHỈ chứa dòng lỗi ---
+errors_only_log = FileHelper.write_log_errors_only(excel_file, all_objects)
+print(f"✅ Đã ghi log lỗi tổng hợp: {errors_only_log}")

@@ -158,6 +158,77 @@ class FileHelper:
         return log_file
 
     @staticmethod
+    def write_log_errors_only(excel_file: str, all_objects: dict) -> str:
+        """
+        Ghi file txt CHỈ chứa các dòng có lỗi (bỏ qua dòng [OK]).
+
+        Cấu trúc:
+        ============================================================
+          SHEET: XML3  (50 dòng | 3 lỗi)
+        ============================================================
+          [LOI] Row Excel 4:
+               - MA_NHOM: '20' không hợp lệ, phải trong 1–19
+               - THANH_TIEN_BV: kỳ vọng 150000 ...
+          [LOI] Row Excel 11:
+               - ...
+
+        -> Không có lỗi.    ← chỉ in dòng này khi sheet sạch
+
+        Tên file: <ten_excel>[<timestamp>]_errors_only.txt
+        """
+        folder = os.path.dirname(os.path.abspath(excel_file))
+        base_name = os.path.splitext(os.path.basename(excel_file))[0]
+        now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_file = os.path.join(
+            folder, f"{base_name}[{now_str}]_errors_only.txt"
+        )
+
+        total_rows = sum(len(v) for v in all_objects.values())
+        total_error_rows = sum(
+            1 for objs in all_objects.values()
+            for rec in objs if rec.validate()
+        )
+
+        lines: list[str] = []
+        lines.append(f"Thời gian  : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+        lines.append(f"File       : {os.path.basename(excel_file)}")
+        lines.append(
+            f"Tổng       : {total_rows} dòng | "
+            f"Lỗi: {total_error_rows} | "
+            f"OK: {total_rows - total_error_rows}"
+        )
+
+        for sheet_name, objects in all_objects.items():
+            # Thu thập lỗi của sheet này trước
+            sheet_error_lines: list[str] = []
+            for excel_row, record in enumerate(objects, start=2):
+                errs = record.validate()
+                if errs:
+                    sheet_error_lines.append(f"\n  [LOI] Row Excel {excel_row}:")
+                    for e in errs:
+                        sheet_error_lines.append(f"       - {e}")
+
+            # Header sheet
+            err_count = len([l for l in sheet_error_lines if "[LOI]" in l])
+            lines.append(f"\n{'=' * 60}")
+            lines.append(
+                f"  SHEET: {sheet_name}  "
+                f"({len(objects)} dòng | {err_count} lỗi)"
+            )
+            lines.append(f"{'=' * 60}")
+
+            if sheet_error_lines:
+                lines.extend(sheet_error_lines)
+            else:
+                lines.append("  -> Không có lỗi.")
+
+        with open(log_file, "w", encoding="utf-8") as f:
+            for line in lines:
+                f.write(line + "\n")
+
+        return log_file
+
+    @staticmethod
     def print_errors_console(all_objects: dict) -> None:
         """In lỗi ra console theo định dạng dễ đọc."""
         lines = FileHelper._render_summary_lines(all_objects)
