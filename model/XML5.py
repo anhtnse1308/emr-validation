@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from typing import Optional, ClassVar, Dict, Any
 import re
+from datetime import datetime
 from model.BHYTBase import BHYTBase
 
 # ===========================================================================
@@ -27,18 +28,6 @@ class Bang5_DienBienLamSang(BHYTBase):
     }
     _NUMERIC: ClassVar[set] = {"STT"}
     _DATE12: ClassVar[set] = {"THOI_DIEM_DBLS"}
-    # -----------------------------------------------------------------------
-    # Helpers nội bộ
-    # -----------------------------------------------------------------------
-    @staticmethod
-    def _to_int(value) -> int | None:
-        if value is None or str(value).strip() == "":
-            return None
-        try:
-            return int(float(str(value).strip()))
-        except (ValueError, TypeError):
-            return None
-
     # -----------------------------------------------------------------------
     # validate() – Logic nghiệp vụ Bảng 5
     # Base class tự xử lý _MAX_LEN, _NUMERIC, _DATE12.
@@ -102,7 +91,6 @@ class Bang5_DienBienLamSang(BHYTBase):
         #    Thêm: kiểm tra thời điểm hợp lý (không phải tương lai)
         # ==================================================================
         if self.THOI_DIEM_DBLS and len(str(self.THOI_DIEM_DBLS)) == 12:
-            from datetime import datetime
             try:
                 dt = datetime.strptime(str(self.THOI_DIEM_DBLS), "%Y%m%d%H%M")
                 if dt > datetime.now():
@@ -136,13 +124,16 @@ class Bang5_DienBienLamSang(BHYTBase):
                         "(kiểm tra dấu ';' thừa)"
                     )
                     continue
-                # GPHN: số, có thể có chữ cái ở đầu (ví dụ: HN001234)
+                # GPHN có thể chứa chữ tiếng Việt, ví dụ:
+                #   000420/BĐ-GPHN  (BĐ = Bình Định, có ký tự Đ)
+                #   HN001234        (chữ Latin + số)
                 # CCCD: 9 hoặc 12 chữ số thuần
-                # → chỉ cần kiểm tra không có ký tự đặc biệt ngoài chữ/số
-                if not re.fullmatch(r"[A-Za-z0-9/\.\-]+", nguoi):
+                # → chỉ cấm khoảng trắng và dấu ";" (ký tự phân cách)
+                if re.search(r"[\s;]", nguoi):
                     errs.append(
-                        f"NGUOI_THUC_HIEN: '{nguoi}' chứa ký tự không hợp lệ. "
-                        "Phải là mã GPHN hoặc số CCCD/định danh cá nhân"
+                        f"NGUOI_THUC_HIEN: '{nguoi}' chứa khoảng trắng hoặc dấu ';'. "
+                        "Nhiều người thực hiện phân cách bằng ';', "
+                        "không được có khoảng trắng trong từng mã"
                     )
 
         # ==================================================================

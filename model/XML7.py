@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, fields
-from datetime import datetime
 from typing import Optional, ClassVar, Dict, Any
 import re
+from datetime import datetime
 from model.BHYTBase import BHYTBase
 
 # ===========================================================================
@@ -52,40 +52,6 @@ class Bang7_GiayRaVien(BHYTBase):
     _DATE12: ClassVar[set] = {"NGAY_VAO", "NGAY_RA", "THOIGIAN_DINHCHI"}
     _DATE8: ClassVar[set] = {"NGAY_CT", "NGOAITRU_TUNGAY", "NGOAITRU_DENNGAY"}
     # -----------------------------------------------------------------------
-    # Helpers nội bộ
-    # -----------------------------------------------------------------------
-    @staticmethod
-    def _to_int(value) -> int | None:
-        if value is None or str(value).strip() == "":
-            return None
-        try:
-            return int(float(str(value).strip()))
-        except (ValueError, TypeError):
-            return None
-
-    @staticmethod
-    def _parse_date12(value) -> datetime | None:
-        """Parse DATE12 yyyymmddHHMM → datetime hoặc None."""
-        from datetime import datetime
-        if not value or len(str(value)) != 12:
-            return None
-        try:
-            return datetime.strptime(str(value), "%Y%m%d%H%M")
-        except ValueError:
-            return None
-
-    @staticmethod
-    def _parse_date8(value) -> datetime | None:
-        """Parse DATE8 yyyymmdd → datetime hoặc None."""
-        from datetime import datetime
-        if not value or len(str(value)) != 8:
-            return None
-        try:
-            return datetime.strptime(str(value), "%Y%m%d")
-        except ValueError:
-            return None
-
-    # -----------------------------------------------------------------------
     # validate() – Logic nghiệp vụ Bảng 7
     # -----------------------------------------------------------------------
     def validate(self) -> list[str]:
@@ -113,7 +79,7 @@ class Bang7_GiayRaVien(BHYTBase):
                 f"NGAY_RA: '{self.NGAY_RA}' không phải ngày giờ hợp lệ "
                 "(định dạng yyyymmddHHMM)"
             )
-        if dt_vao and dt_ra and dt_ra < dt_vao:
+        if isinstance(dt_vao, datetime) and isinstance(dt_ra, datetime) and dt_ra < dt_vao:
             errs.append(
                 f"NGAY_RA ({self.NGAY_RA}) không được trước NGAY_VAO ({self.NGAY_VAO})"
             )
@@ -157,12 +123,12 @@ class Bang7_GiayRaVien(BHYTBase):
                     "không phải ngày giờ hợp lệ (định dạng yyyymmddHHMM)"
                 )
             # THOIGIAN_DINHCHI phải trong khoảng [NGAY_VAO, NGAY_RA]
-            if dt_dct and dt_vao and dt_dct < dt_vao:
+            if isinstance(dt_dct, datetime) and isinstance(dt_vao, datetime) and dt_dct < dt_vao:
                 errs.append(
                     f"THOIGIAN_DINHCHI ({self.THOIGIAN_DINHCHI}) "
                     f"không được trước NGAY_VAO ({self.NGAY_VAO})"
                 )
-            if dt_dct and dt_ra and dt_dct > dt_ra:
+            if isinstance(dt_dct, datetime) and isinstance(dt_ra, datetime) and dt_dct > dt_ra:
                 errs.append(
                     f"THOIGIAN_DINHCHI ({self.THOIGIAN_DINHCHI}) "
                     f"không được sau NGAY_RA ({self.NGAY_RA})"
@@ -228,14 +194,14 @@ class Bang7_GiayRaVien(BHYTBase):
             )
 
         # NGOAITRU_TUNGAY không được trước ngày ra viện
-        if dt_tu and dt_ra and dt_tu.date() < dt_ra.date():
+        if isinstance(dt_tu, datetime) and isinstance(dt_ra, datetime) and dt_tu.date() < dt_ra.date():
             errs.append(
                 f"NGOAITRU_TUNGAY ({self.NGOAITRU_TUNGAY}) không được trước "
                 f"ngày ra viện ({str(self.NGAY_RA)[:8]})"
             )
 
         # NGOAITRU_DENNGAY >= NGOAITRU_TUNGAY
-        if dt_tu and dt_den and dt_den < dt_tu:
+        if isinstance(dt_tu, datetime) and isinstance(dt_den, datetime) and dt_den < dt_tu:
             errs.append(
                 f"NGOAITRU_DENNGAY ({self.NGOAITRU_DENNGAY}) không được trước "
                 f"NGOAITRU_TUNGAY ({self.NGOAITRU_TUNGAY})"

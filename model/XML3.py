@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from typing import Optional, ClassVar, Dict, Any
 import re
+from datetime import datetime
 from model.BHYTBase import BHYTBase
 
 # ===========================================================================
@@ -86,28 +87,6 @@ class Bang3_DVKT_VTYT(BHYTBase):
         "MA_PTTT", "VET_THUONG_TP", "PP_VO_CAM", "VI_TRI_TH_DVKT", "TAI_SU_DUNG",
     }
     _DATE12: ClassVar[set] = {"NGAY_YL", "NGAY_TH_YL", "NGAY_KQ"}
-    # -----------------------------------------------------------------------
-    # Helpers nội bộ
-    # -----------------------------------------------------------------------
-    @staticmethod
-    def _to_float(value) -> float | None:
-        if value is None or str(value).strip() == "":
-            return None
-        try:
-            return float(str(value).strip())
-        except (ValueError, TypeError):
-            return None
-
-    @staticmethod
-    def _to_int(value) -> int | None:
-        f = Bang3_DVKT_VTYT._to_float(value)
-        return int(f) if f is not None else None
-
-    @staticmethod
-    def _decimal_places(value) -> int:
-        s = str(value).strip()
-        return len(s.split(".")[1]) if "." in s else 0
-
     # -----------------------------------------------------------------------
     # validate() – Toàn bộ logic nghiệp vụ Bảng 3
     # Base class tự xử lý _MAX_LEN, _NUMERIC, _DATE12.
@@ -519,7 +498,7 @@ class Bang3_DVKT_VTYT(BHYTBase):
         # ==================================================================
         # 41. VET_THUONG_TP – Số, 1 ký tự, chỉ ghi "1" hoặc để trống
         # ==================================================================
-        if self.VET_THUONG_TP is not None and self.VET_THUONG_TP != '':
+        if self.VET_THUONG_TP is not None:
             if self._to_int(self.VET_THUONG_TP) != 1:
                 errs.append(
                     f"VET_THUONG_TP: '{self.VET_THUONG_TP}' không hợp lệ, "
@@ -600,7 +579,7 @@ class Bang3_DVKT_VTYT(BHYTBase):
         # ==================================================================
         # 46. TAI_SU_DUNG – Số, 1 ký tự, chỉ ghi "1" hoặc để trống
         # ==================================================================
-        if self.TAI_SU_DUNG is not None and self.TAI_SU_DUNG != '':
+        if self.TAI_SU_DUNG is not None:
             if self._to_int(self.TAI_SU_DUNG) != 1:
                 errs.append(
                     f"TAI_SU_DUNG: '{self.TAI_SU_DUNG}' không hợp lệ, "

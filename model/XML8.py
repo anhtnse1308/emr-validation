@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from typing import Optional, ClassVar, Dict, Any
 import re
+from datetime import datetime
 from model.BHYTBase import BHYTBase
 
 # ===========================================================================
@@ -44,38 +45,6 @@ class Bang8_TomTatHSBA(BHYTBase):
     _NUMERIC: ClassVar[set] = {"SO_CONCHET", "KET_QUA_DTRI"}
     _DATE12: ClassVar[set] = {"NGAY_VAO", "NGAY_RA"}
     _DATE8: ClassVar[set] = {"NGAY_SINHCON", "NGAY_CONCHET", "NGAY_CT"}
-    # -----------------------------------------------------------------------
-    # Helpers nội bộ
-    # -----------------------------------------------------------------------
-    @staticmethod
-    def _to_int(value) -> int | None:
-        if value is None or str(value).strip() == "":
-            return None
-        try:
-            return int(float(str(value).strip()))
-        except (ValueError, TypeError):
-            return None
-
-    @staticmethod
-    def _parse_date12(value):
-        from datetime import datetime
-        if not value or len(str(value)) != 12:
-            return None
-        try:
-            return datetime.strptime(str(value), "%Y%m%d%H%M")
-        except ValueError:
-            return None
-
-    @staticmethod
-    def _parse_date8(value):
-        from datetime import datetime
-        if not value or len(str(value)) != 8:
-            return None
-        try:
-            return datetime.strptime(str(value), "%Y%m%d")
-        except ValueError:
-            return None
-
     # -----------------------------------------------------------------------
     # validate() – Logic nghiệp vụ Bảng 8
     # -----------------------------------------------------------------------
@@ -130,7 +99,7 @@ class Bang8_TomTatHSBA(BHYTBase):
                 f"NGAY_RA: '{self.NGAY_RA}' không phải ngày giờ hợp lệ "
                 "(định dạng yyyymmddHHMM)"
             )
-        if dt_vao and dt_ra and dt_ra < dt_vao:
+        if isinstance(dt_vao, datetime) and isinstance(dt_ra, datetime) and dt_ra < dt_vao:
             errs.append(
                 f"NGAY_RA ({self.NGAY_RA}) không được trước NGAY_VAO ({self.NGAY_VAO})"
             )
@@ -186,16 +155,16 @@ class Bang8_TomTatHSBA(BHYTBase):
             if has_so and not has_chet:
                 errs.append(
                     "NGAY_CONCHET: bắt buộc khi có thông tin con chết "
-                    "(NGAY_SINHCON hoặc SO_CONCHET đã được ghi)"
+                    "(NGAY_SINHCON và SO_CONCHET đã được ghi)"
                 )
             if has_chet and not has_so:
                 errs.append(
                     "SO_CONCHET: bắt buộc khi có thông tin con chết "
-                    "(NGAY_SINHCON hoặc NGAY_CONCHET đã được ghi)"
+                    "(NGAY_SINHCON và NGAY_CONCHET đã được ghi)"
                 )
 
         # NGAY_CONCHET >= NGAY_SINHCON
-        if dt_sinh and dt_chet and dt_chet < dt_sinh:
+        if isinstance(dt_sinh, datetime) and isinstance(dt_chet, datetime) and dt_chet < dt_sinh:
             errs.append(
                 f"NGAY_CONCHET ({self.NGAY_CONCHET}) không được trước "
                 f"NGAY_SINHCON ({self.NGAY_SINHCON})"
@@ -208,12 +177,12 @@ class Bang8_TomTatHSBA(BHYTBase):
             )
 
         # NGAY_SINHCON phải trong khoảng NGAY_VAO..NGAY_RA
-        if dt_sinh and dt_vao and dt_sinh.date() < dt_vao.date():
+        if isinstance(dt_sinh, datetime) and isinstance(dt_vao, datetime) and dt_sinh.date() < dt_vao.date():
             errs.append(
                 f"NGAY_SINHCON ({self.NGAY_SINHCON}) không được trước "
                 f"NGAY_VAO ({str(self.NGAY_VAO)[:8]})"
             )
-        if dt_sinh and dt_ra and dt_sinh.date() > dt_ra.date():
+        if isinstance(dt_sinh, datetime) and isinstance(dt_ra, datetime) and dt_sinh.date() > dt_ra.date():
             errs.append(
                 f"NGAY_SINHCON ({self.NGAY_SINHCON}) không được sau "
                 f"NGAY_RA ({str(self.NGAY_RA)[:8]})"
@@ -228,7 +197,7 @@ class Bang8_TomTatHSBA(BHYTBase):
                 f"NGAY_CT: '{self.NGAY_CT}' không phải ngày hợp lệ "
                 "(định dạng yyyymmdd)"
             )
-        if dt_ct and dt_ra and dt_ct.date() < dt_ra.date():
+        if isinstance(dt_ct, datetime) and isinstance(dt_ra, datetime) and dt_ct.date() < dt_ra.date():
             errs.append(
                 f"NGAY_CT ({self.NGAY_CT}) không được trước ngày ra viện "
                 f"NGAY_RA ({str(self.NGAY_RA)[:8]})"

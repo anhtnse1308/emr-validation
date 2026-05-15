@@ -1,3 +1,73 @@
+from datetime import datetime
+from typing import Optional
+
+def to_float(value) -> Optional[float]:
+    """
+    Chuyển string/int → float. Trả None nếu rỗng hoặc không parse được.
+    """
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        return float(str(value).strip())
+    except (ValueError, TypeError):
+        return None
+
+
+def decimal_places(value) -> int:
+    """
+    Đếm số chữ số thập phân của chuỗi số (dùng dấu '.').
+    VD: '3.500' → 3, '100' → 0
+    """
+    s = str(value).strip()
+    return len(s.split(".")[1]) if "." in s else 0
+
+
+
+
+# ===========================================================================
+# Shared parse helpers – dùng chung cho toàn bộ XML model classes
+# Import vào BHYTBase để các class con dùng qua self._parse_date12() v.v.
+# ===========================================================================
+
+def parse_date12(value) -> Optional[datetime]:
+    """
+    Parse chuỗi DATE12 (yyyymmddHHMM, 12 ký tự) → datetime.
+    Trả None nếu rỗng, sai độ dài, hoặc ngày giờ không hợp lệ.
+    """
+    if not value or len(str(value).strip()) != 12:
+        return None
+    try:
+        return datetime.strptime(str(value).strip(), "%Y%m%d%H%M")
+    except ValueError:
+        return None
+
+
+def parse_date8(value) -> Optional[datetime]:
+    """
+    Parse chuỗi DATE8 (yyyymmdd, 8 ký tự) → datetime.
+    Trả None nếu rỗng, sai độ dài, hoặc ngày không hợp lệ.
+    """
+    if not value or len(str(value).strip()) != 8:
+        return None
+    try:
+        return datetime.strptime(str(value).strip(), "%Y%m%d")
+    except ValueError:
+        return None
+
+
+def to_int(value) -> Optional[int]:
+    """
+    Chuyển string/float → int. Trả None nếu rỗng hoặc không parse được.
+    Dùng qua float() trước để xử lý cả "5.0", "3.500", v.v.
+    """
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        return int(float(str(value).strip()))
+    except (ValueError, TypeError):
+        return None
+
+
 import os
 import json
 from datetime import datetime
