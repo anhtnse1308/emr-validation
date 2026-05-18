@@ -15,11 +15,14 @@ from services.helper import FileHelper
 import os
 
 while True:
+    try:
+        excel_file = input("Nhập file Excel: ").strip().strip('"')
 
-    excel_file = input("Nhập file Excel: ").strip().strip('"')
-
-    if os.path.exists(excel_file):
-        break
+        if os.path.exists(excel_file):
+            break
+    except KeyboardInterrupt:
+        print("\nĐã hủy chương trình.")
+        exit()
 
     choice = input(
         "❌ File không tồn tại! Nhập lại? (Y/N): "
@@ -47,3 +50,10 @@ print(f"✅ Đã ghi log JSON chi tiết: {json_log}")
 # --- Ghi log txt CHỈ chứa dòng lỗi ---
 errors_only_log = FileHelper.write_log_errors_only(excel_file, all_objects)
 print(f"✅ Đã ghi log lỗi tổng hợp: {errors_only_log}")
+# --- Xuất Excel summary (tất cả dòng + STATUS + ERRORS) ---
+excel_summary = FileHelper.write_excel_summary(excel_file, all_objects)
+print(f"✅ Đã xuất Excel tổng hợp  : {excel_summary}")
+
+# --- Xuất Excel chỉ dòng lỗi + ROW_EXCEL ---
+excel_errors = FileHelper.write_excel_errors_only(excel_file, all_objects)
+print(f"✅ Đã xuất Excel lỗi       : {excel_errors}")
