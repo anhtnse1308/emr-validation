@@ -129,6 +129,7 @@ class Bang5_DienBienLamSang(BHYTBase):
                 #   HN001234        (chữ Latin + số)
                 # CCCD: 9 hoặc 12 chữ số thuần
                 # → chỉ cấm khoảng trắng và dấu ";" (ký tự phân cách)
+                # regex cũ if not re.fullmatch(r"[A-Za-z0-9/\.\-]+", nguoi):
                 if re.search(r"[\s;]", nguoi):
                     errs.append(
                         f"NGUOI_THUC_HIEN: '{nguoi}' chứa khoảng trắng hoặc dấu ';'. "
