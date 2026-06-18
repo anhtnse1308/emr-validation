@@ -20,6 +20,7 @@ from giamdinh.rules.ThuocChiDinh import ThuocChiDinh
 from giamdinh.rules.LuotKhamBenhNhan import LuotKhamBenhNhan
 from giamdinh.rules.GioiHanTanSuat import GioiHanTanSuat
 from giamdinh.rules.DieuKienDacBiet import DieuKienDacBiet
+from giamdinh.rules.KiemTraDuLieu import KiemTraDuLieu
 
 
 class GiamDinhService:
@@ -34,6 +35,7 @@ class GiamDinhService:
         LuotKhamBenhNhan(),
         GioiHanTanSuat(),
         DieuKienDacBiet(),
+        KiemTraDuLieu(),
     ]
 
     @classmethod
@@ -56,7 +58,7 @@ class GiamDinhService:
     def write_excel_giamdinh(excel_file: str, errors: list[GiamDinhError]) -> str:
         """
         Xuất kết quả giám định ra file Excel.
-        Tên file: <ten_goc>-giamdinh[<timestamp>].xlsx
+        Tên file: <ten_goc>[<timestamp>]_giamdinh.xlsx
 
         Sheet 1 – TONG_HOP:
           Thống kê số lỗi theo sheet XML + mã lý do từ chối
