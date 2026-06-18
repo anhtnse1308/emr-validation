@@ -61,6 +61,15 @@ CAN_CU_AFB        = "QĐ 1314/QĐ-BYT ngày 24/3/2022 (Hướng dẫn CĐ-ĐT-DP
 CAN_CU_MONITORING = "QĐ 7435/QĐ-BYT ngày 14/12/2018 (STT 5356) + TT 13/2019/TT-BYT"
 CAN_CU_CT_CQ      = "TT 13/2019/TT-BYT Phụ lục III – Điều chỉnh giá CT có/không cản quang"
 
+# ---------------------------------------------------------------------------
+# Khám bệnh (MA_LOAI_KCB=1) – DVKT lặp > 2 lần cùng mã, cùng ngày y lệnh
+# CV 1008/BHXH-GĐBHYT ngày tháng 07/2022 (BHXH tỉnh Bình Dương)
+# ---------------------------------------------------------------------------
+MA_LOAI_KCB_KHAM_BENH = "01"
+MAX_DVKT_LAP_NGAY = 2
+
+CAN_CU_DVKT_LAP_KHAM = "CV 1008/BHXH-GĐBHYT ngày tháng 07/2022 (BHXH tỉnh Bình Dương)"
+
 
 def _ngay(ngay_str: str) -> str:
     """Lấy 8 ký tự ngày từ chuỗi DATE12 hoặc DATE8."""
@@ -86,6 +95,7 @@ class GioiHanTanSuat(GiamDinhBase):
         errors: list[GiamDinhError] = []
         errors.extend(self._check_tan_suat(all_objects))
         errors.extend(self._check_ct_can_quang(all_objects))
+        errors.extend(self._check_dvkt_lap_lai_kham_benh(all_objects))
         return errors
 
     # ------------------------------------------------------------------
@@ -171,5 +181,54 @@ class GioiHanTanSuat(GiamDinhBase):
                     can_cu=CAN_CU_CT_CQ,
                     ma_dich_vu=ma_dv,
                 ))
+
+        return errors
+
+    # ------------------------------------------------------------------
+    # CV 1008/2022 – Khám bệnh (MA_LOAI_KCB=1): DVKT lặp > 2 lần
+    #                cùng mã DVKT, cùng ngày y lệnh
+    # ------------------------------------------------------------------
+    def _check_dvkt_lap_lai_kham_benh(self, all_objects: dict) -> list[GiamDinhError]:
+        """
+        Áp dụng cho mọi mã DVKT (không giới hạn danh sách cố định),
+        chỉ với lần khám có MA_LOAI_KCB = 1 (khám bệnh).
+        """
+        errors: list[GiamDinhError] = []
+
+        # MA_LK → MA_LOAI_KCB (từ XML1)
+        loai_kcb_map: dict[str, str] = {
+            (getattr(r, "MA_LK", "") or "").strip(): (getattr(r, "MA_LOAI_KCB", "") or "").strip()
+            for _, r in self._get_rows(all_objects, "XML1")
+        }
+
+        # Group XML3 theo (MA_LK, MA_DICH_VU, NGAY_YL) – chỉ với lần khám MA_LOAI_KCB=1
+        groups: dict[tuple, list] = defaultdict(list)
+        for row_excel, rec in self._get_rows(all_objects, "XML3"):
+            ma_lk = (getattr(rec, "MA_LK",      None) or "").strip()
+            ma_dv  = (getattr(rec, "MA_DICH_VU", None) or "").strip()
+            ngay_yl = _ngay(getattr(rec, "NGAY_YL", None) or "")
+            if not ma_lk or not ma_dv:
+                continue
+            if loai_kcb_map.get(ma_lk, "") != MA_LOAI_KCB_KHAM_BENH:
+                continue
+            groups[(ma_lk, ma_dv, ngay_yl)].append((row_excel, rec))
+
+        for (ma_lk, ma_dv, ngay_yl), rows in groups.items():
+            if len(rows) > MAX_DVKT_LAP_NGAY:
+                for row_excel, rec in rows[MAX_DVKT_LAP_NGAY:]:
+                    errors.append(GiamDinhError(
+                        sheet="XML3",
+                        ma_lk=ma_lk,
+                        row_excel=row_excel,
+                        ma_ly_do="WARN.DVKT_LAP",
+                        mo_ta=(
+                            f"Khám bệnh (MA_LOAI_KCB=01): DVKT '{ma_dv}' đề nghị "
+                            f"thanh toán {len(rows)} lần cùng ngày y lệnh {ngay_yl}, "
+                            f"vượt mức {MAX_DVKT_LAP_NGAY} lần. "
+                            "Kiểm tra lỗi nhập liệu trùng dòng hoặc khai tăng DVKT."
+                        ),
+                        can_cu=CAN_CU_DVKT_LAP_KHAM,
+                        ma_dich_vu=ma_dv,
+                    ))
 
         return errors
