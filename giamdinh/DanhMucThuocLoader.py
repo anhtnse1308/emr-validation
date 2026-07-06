@@ -110,7 +110,7 @@ class DanhMucThuocLoader:
         df = pd.read_excel(self.filepath, dtype=str)
         df = df.fillna("")
 
-        for i, row in df.iterrows():
+        for row_num, (_, row) in enumerate(df.iterrows(), start=2):  # start=2: bỏ qua header
             def g(col):
                 return str(row.get(col, "")).strip()
 
@@ -128,7 +128,7 @@ class DanhMucThuocLoader:
                 ten_hoat_chat = g("TEN_HOAT_CHAT"),
                 don_vi_tinh   = g("DON_VI_TINH"),
                 ham_luong     = g("HAM_LUONG"),
-                duong_dung    = g("MA_DUONG_DUNG"),
+                duong_dung    = g("DUONG_DUNG"),
                 ma_duong_dung = g("MA_DUONG_DUNG"),
                 dang_bao_che  = g("DANG_BAO_CHE"),
                 don_gia       = gf("DON_GIA"),
@@ -140,7 +140,7 @@ class DanhMucThuocLoader:
                 ma_cskcb      = g("MA_CSKCB"),
                 loai_thuoc    = g("LOAI_THUOC"),
                 loai_thau     = g("LOAI_THAU"),
-                row_index     = int(i) + 2,  # 1-indexed + header
+                row_index     = row_num,
             )
             if not entry.ma_thuoc:
                 continue
