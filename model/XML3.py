@@ -68,7 +68,7 @@ class Bang3_DVKT_VTYT(BHYTBase):
         "DON_GIA_BV": 15, "DON_GIA_BH": 15, "TT_THAU": 50,
         "TYLE_TT_DV": 3, "TYLE_TT_BH": 3,
         "THANH_TIEN_BV": 15, "THANH_TIEN_BH": 15, "T_TRANTT": 15,
-        "MUC_HUONG": 3,
+        "MUC_HUONG": 4,
         "T_NGUONKHAC_NSNN": 15, "T_NGUONKHAC_VTNN": 15,
         "T_NGUONKHAC_VTTN": 15, "T_NGUONKHAC_CL": 15, "T_NGUONKHAC": 15,
         "T_BNTT": 15, "T_BNCCT": 15, "T_BHTT": 15,
@@ -295,10 +295,10 @@ class Bang3_DVKT_VTYT(BHYTBase):
                 )
 
         # ==================================================================
-        # 22. MUC_HUONG – Số, max 3, số nguyên, 0-100
+        # 22. MUC_HUONG – Số, max 4, số thực 0-100, chấp nhận thập phân (VD: 47.5)
         #    Đúng tuyến: 80/95/100; trái tuyến: nhân tỷ lệ (32=80%×40%, v.v.)
         # ==================================================================
-        muc_huong = self._to_int(self.MUC_HUONG)
+        muc_huong = self._to_float(self.MUC_HUONG)
         if self.MUC_HUONG is not None and muc_huong is not None:
             if not (0 <= muc_huong <= 100):
                 errs.append(

@@ -61,7 +61,7 @@ class Bang2_Thuoc(BHYTBase):
         "THANH_TIEN_BV": 15, "THANH_TIEN_BH": 15,
         "T_NGUONKHAC_NSNN": 15, "T_NGUONKHAC_VTNN": 15,
         "T_NGUONKHAC_VTTN": 15, "T_NGUONKHAC_CL": 15, "T_NGUONKHAC": 15,
-        "MUC_HUONG": 3, "T_BNTT": 15, "T_BNCCT": 15, "T_BHTT": 15,
+        "MUC_HUONG": 4, "T_BNTT": 15, "T_BNCCT": 15, "T_BHTT": 15,
         "MA_KHOA": 50, "MA_BAC_SI": 255, "MA_DICH_VU": 255,
         "NGAY_YL": 12, "NGAY_TH_YL": 12,
         "MA_PTTT": 1, "NGUON_CTRA": 1, "VET_THUONG_TP": 1,
@@ -102,11 +102,11 @@ class Bang2_Thuoc(BHYTBase):
                 pass  # đã được bắt ở _NUMERIC
 
         # ----------------------------------------------------------------
-        # MUC_HUONG: số nguyên 0-100
+        # MUC_HUONG: số thực 0-100, chấp nhận thập phân (VD: 47.5 theo TT mới)
         # ----------------------------------------------------------------
         if self.MUC_HUONG:
             try:
-                v = int(self.MUC_HUONG)
+                v = float(self.MUC_HUONG)
                 if not (0 <= v <= 100):
                     errors.append(
                         f"[MUC_HUONG] Ngoài khoảng hợp lệ: '{self.MUC_HUONG}' (cần 0-100)"
