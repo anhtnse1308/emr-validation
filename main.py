@@ -137,3 +137,8 @@ else:
 print("\n" + "=" * 60)
 print("  HOÀN TẤT")
 print("=" * 60)
+
+while True:
+    if input("Nhấn Enter để thoát...") == "":
+        break
+#pyinstaller --onefile --console --name EMRValidation --collect-submodules giamdinh --collect-submodules services main.py
