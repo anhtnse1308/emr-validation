@@ -133,12 +133,35 @@ else:
         dm_excel = write_excel_danhmuc(excel_file, dm_errors, danh_muc_file)
         print(f"\n✅ Excel danh mục    : {dm_excel}")
 
+
+# ===========================================================================
+# 4. Kiểm tra ngày giường nội trú (MA_LOAI_KCB=03)
+# ===========================================================================
+print("\n" + "=" * 60)
+print("  4. KIỂM TRA NGÀY GIƯỜNG NỘI TRÚ")
+print("=" * 60)
+
+from giamdinh.rules.KiemTraNgayGiuong import KiemTraNgayGiuong
+
+gg_errors = KiemTraNgayGiuong().check(all_objects)
+
+if gg_errors:
+    cnt_gg = Counter(e.ma_ly_do for e in gg_errors)
+    print(f"\n⚠️  Phát hiện {len(gg_errors)} trường hợp:")
+    print(f"   WARN.GG01 (thiếu/thừa dịch vụ giường) : {cnt_gg.get('WARN.GG01', 0)}")
+    print(f"   WARN.GG02 (trùng giường cùng ngày)    : {cnt_gg.get('WARN.GG02', 0)}")
+else:
+    print("\n✓ Không phát hiện lỗi ngày giường.")
+
+gg_excel = KiemTraNgayGiuong.write_excel(excel_file, gg_errors)
+print(f"\n✅ Excel ngày giường : {gg_excel}")
+
 # ===========================================================================
 print("\n" + "=" * 60)
 print("  HOÀN TẤT")
 print("=" * 60)
 
-while True:
-    if input("Nhấn Enter để thoát...") == "":
-        break
-#pyinstaller --onefile --console --name EMRValidation --collect-submodules giamdinh --collect-submodules services main.py
+try:
+    input("\nBấm Enter để thoát...")
+except KeyboardInterrupt:
+    pass
