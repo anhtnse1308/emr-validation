@@ -39,16 +39,18 @@ def _parse_date(val: str) -> date | None:
 
 
 def _so_ngay(ngay_vao: str, ngay_ra: str) -> int | None:
-    """Số ngày điều trị = NGAY_RA - NGAY_VAO + 1."""
+    """Số ngày điều trị = NGAY_RA - NGAY_VAO."""
     d_vao = _parse_date(ngay_vao)
     d_ra  = _parse_date(ngay_ra)
     if d_vao and d_ra and d_ra >= d_vao:
-        return (d_ra - d_vao).days + 1
+        return (d_ra - d_vao).days
     return None
 
 
+#def _is_giuong(ten: str) -> bool:
+    #return "giường" in str(ten or "").lower()
 def _is_giuong(ten: str) -> bool:
-    return "giường" in str(ten or "").lower()
+    return str(ten or "").strip().lower().startswith("giường")
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +58,7 @@ def _is_giuong(ten: str) -> bool:
 # ---------------------------------------------------------------------------
 class KiemTraNgayGiuong(GiamDinhBase):
     """
-    G1: Số dịch vụ giường ≠ (NGAY_RA - NGAY_VAO + 1)
+    G1: Số dịch vụ giường ≠ (NGAY_RA - NGAY_VAO)
     G2: Cùng MA_LK có > 1 dịch vụ giường trong cùng ngày
     Chỉ áp dụng MA_LOAI_KCB = 03.
     """
