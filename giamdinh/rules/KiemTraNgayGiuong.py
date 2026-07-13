@@ -8,8 +8,8 @@ Detect từ XML1 + XML3:
 
 Logic:
   - "Dịch vụ giường" = dòng XML3 có TEN_DICH_VU chứa từ "giường" (không phân biệt hoa/thường)
-  - Mỗi dòng giường = 1 ngày, xác định bởi NGAY_TH_YL[:8]
-  - Số ngày điều trị = (NGAY_RA.date - NGAY_VAO.date).days + 1  (luôn dùng công thức này)
+  - Mỗi dòng giường = 1 ngày, xác định bởi NGAY_YL[:8]
+  - Số ngày điều trị = (NGAY_RA.date - NGAY_VAO.date).days  (luôn dùng công thức này)
   - Chỉ áp dụng MA_LOAI_KCB = "03" (nội trú)
 """
 
@@ -47,8 +47,6 @@ def _so_ngay(ngay_vao: str, ngay_ra: str) -> int | None:
     return None
 
 
-#def _is_giuong(ten: str) -> bool:
-    #return "giường" in str(ten or "").lower()
 def _is_giuong(ten: str) -> bool:
     return str(ten or "").strip().lower().startswith("giường")
 
@@ -90,12 +88,12 @@ class KiemTraNgayGiuong(GiamDinhBase):
         for row_excel, rec in self._get_rows(all_objects, "XML3"):
             ma_lk       = (getattr(rec, "MA_LK",       None) or "").strip()
             ten_dich_vu  = (getattr(rec, "TEN_DICH_VU", None) or "").strip()
-            ngay_th_yl   = (getattr(rec, "NGAY_TH_YL", None) or "").strip()
+            ngay_yl      = (getattr(rec, "NGAY_YL", None) or "").strip()
             if not ma_lk or ma_lk not in xml1_map:
                 continue
             if not _is_giuong(ten_dich_vu):
                 continue
-            ngay_str = str(ngay_th_yl)[:8] if ngay_th_yl else ""
+            ngay_str = str(ngay_yl)[:8] if ngay_yl else ""
             giuong_rows[ma_lk].append((row_excel, ngay_str, ten_dich_vu))
 
         # Kiểm tra
