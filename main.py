@@ -5,6 +5,8 @@ from giamdinh.DanhMucThuocLoader import DanhMucThuocLoader
 from giamdinh.rules.KiemTraThuocDanhMuc import KiemTraThuocDanhMuc
 from collections import Counter
 import os
+import time
+import sys
 
 
 # ===========================================================================
@@ -160,8 +162,14 @@ print(f"\n✅ Excel ngày giường : {gg_excel}")
 print("\n" + "=" * 60)
 print("  HOÀN TẤT")
 print("=" * 60)
-
+'''
 try:
     input("\nBấm Enter để thoát...")
 except KeyboardInterrupt:
     pass
+'''
+for i in range(5, 0, -1):
+    print(f"Đóng sau {i} giây...")
+    time.sleep(1)
+
+print("Tạm biệt!")
