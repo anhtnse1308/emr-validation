@@ -1,3 +1,4 @@
+import time
 from services.excel_service import ExcelService
 from services.helper import FileHelper
 from giamdinh.GiamDinhServices import GiamDinhService
@@ -5,8 +6,6 @@ from giamdinh.DanhMucThuocLoader import DanhMucThuocLoader
 from giamdinh.rules.KiemTraThuocDanhMuc import KiemTraThuocDanhMuc
 from collections import Counter
 import os
-import time
-import sys
 
 
 # ===========================================================================
@@ -158,18 +157,42 @@ else:
 gg_excel = KiemTraNgayGiuong.write_excel(excel_file, gg_errors)
 print(f"\n✅ Excel ngày giường : {gg_excel}")
 
+
+# ===========================================================================
+# 5. Sàng lọc mã đối tượng KCB
+# ===========================================================================
+print("\n" + "=" * 60)
+print("  5. SÀNG LỌC MÃ ĐỐI TƯỢNG KCB")
+print("=" * 60)
+
+from giamdinh.rules.SangLocDoiTuong import SangLocDoiTuong
+
+dt_errors = SangLocDoiTuong().check(all_objects)
+
+if dt_errors:
+    cnt_dt = Counter(e.ma_ly_do for e in dt_errors)
+    print(f"\n⚠️  Phát hiện {len(dt_errors)} trường hợp:")
+    MA_TEN = {
+        "WARN.DT01": "1.14 ≠ ngoại trú",
+        "WARN.DT02": "1.15 ≠ nội trú",
+        "WARN.DT03": "DKBD=74021 nhưng đối tượng sai",
+        "WARN.DT04": "DKBD≠74021 nhưng đối tượng/giấy CT sai",
+        "WARN.DT05": "1.7 sơ sinh vượt 5 ngày",
+    }
+    for ma, so in sorted(cnt_dt.items()):
+        print(f"   {ma:12s} ({MA_TEN.get(ma,'')}): {so}")
+else:
+    print("\n✓ Không phát hiện vi phạm mã đối tượng KCB.")
+
+dt_excel = SangLocDoiTuong.write_excel(excel_file, dt_errors)
+print(f"\n✅ Excel đối tượng  : {dt_excel}")
+
 # ===========================================================================
 print("\n" + "=" * 60)
 print("  HOÀN TẤT")
 print("=" * 60)
-'''
-try:
-    input("\nBấm Enter để thoát...")
-except KeyboardInterrupt:
-    pass
-'''
+
 for i in range(5, 0, -1):
     print(f"Đóng sau {i} giây...")
     time.sleep(1)
-
 print("Tạm biệt!")
