@@ -1,1 +1,1 @@
-#pyinstaller --onefile --console --name EMRValidation --collect-submodules giamdinh --collect-submodules services main.py
+#pyinstaller --onefile --console --name EMRV --collect-submodules giamdinh --collect-submodules services main.py
