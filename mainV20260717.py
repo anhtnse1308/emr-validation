@@ -9,48 +9,10 @@ import os
 
 
 # ===========================================================================
-# Đường dẫn file txt cố định
+# Helper prompt
 # ===========================================================================
-PATH_TXT_BHYT    = r"C:\Users\Admin\Desktop\Also Recycle Bin\PATH_CHECK_XML.txt"
-PATH_TXT_BQP     = r"C:\Users\Admin\Desktop\Also Recycle Bin\PATH_CHECK_XML_BQP.txt"
-
-
-def _doc_file_txt(path_txt: str) -> tuple[str, str]:
-    """
-    Đọc file txt, trả về (danh_muc_file, excel_file).
-    Dòng 1: đường dẫn file danh mục thuốc
-    Dòng 2: đường dẫn file Excel BHYT
-    """
-    try:
-        lines = open(path_txt, encoding="utf-8-sig").read().splitlines()
-    except UnicodeDecodeError:
-        lines = open(path_txt, encoding="cp1252").read().splitlines()
-
-    # Lọc bỏ dòng trống
-    lines = [l.strip().strip('"').strip() for l in lines if l.strip()]
-
-    if len(lines) < 2:
-        print(f"❌ File txt thiếu dữ liệu (cần 2 dòng): {path_txt}")
-        exit()
-
-    danh_muc = lines[0]
-    excel    = lines[1]
-
-    errors = []
-    if not os.path.exists(danh_muc):
-        errors.append(f"   Danh mục : {danh_muc}")
-    if not os.path.exists(excel):
-        errors.append(f"   Excel    : {excel}")
-
-    if errors:
-        print(f"❌ File không tồn tại:\n" + "\n".join(errors))
-        exit()
-
-    return danh_muc, excel
-
-
 def _prompt_path(label: str, required: bool = True) -> str:
-    """Hỏi đường dẫn file thủ công."""
+    """Hỏi đường dẫn file, lặp đến khi hợp lệ hoặc bỏ qua (nếu không bắt buộc)."""
     while True:
         try:
             p = input(f"{label}: ").strip().strip('"')
@@ -74,45 +36,17 @@ def _prompt_path(label: str, required: bool = True) -> str:
 
 
 # ===========================================================================
-# 0. Input – Menu chọn nguồn file
+# 0. Input
 # ===========================================================================
 print("=" * 60)
 print("  CÔNG CỤ VALIDATE & GIÁM ĐỊNH XML BHYT")
 print("=" * 60)
-print()
-print("  Chọn nguồn file:")
-print("  [1] BHYT thường       (đọc từ PATH_CHECK_XML.txt)")
-print("  [2] BHYT Quân đội/QP  (đọc từ PATH_CHECK_XML_BQP.txt)")
-print("  [3] Nhập tay")
-print()
 
-while True:
-    try:
-        chon = input("  Lựa chọn (1/2/3): ").strip()
-    except KeyboardInterrupt:
-        print("\nĐã hủy."); exit()
-
-    if chon == "1":
-        print(f"\n  Đọc từ: {PATH_TXT_BHYT}")
-        danh_muc_file, excel_file = _doc_file_txt(PATH_TXT_BHYT)
-        print(f"  Danh mục : {danh_muc_file}")
-        print(f"  Excel    : {excel_file}")
-        break
-    elif chon == "2":
-        print(f"\n  Đọc từ: {PATH_TXT_BQP}")
-        danh_muc_file, excel_file = _doc_file_txt(PATH_TXT_BQP)
-        print(f"  Danh mục : {danh_muc_file}")
-        print(f"  Excel    : {excel_file}")
-        break
-    elif chon == "3":
-        excel_file    = _prompt_path("Nhập file Excel BHYT")
-        danh_muc_file = _prompt_path(
-            "Nhập file danh mục thuốc (Enter để bỏ qua)",
-            required=False,
-        )
-        break
-    else:
-        print("  ❌ Vui lòng nhập 1, 2 hoặc 3.")
+excel_file    = _prompt_path("Nhập file Excel BHYT")
+danh_muc_file = _prompt_path(
+    "Nhập file danh mục thuốc (Enter để bỏ qua)",
+    required=False,
+)
 
 # ===========================================================================
 # 1. Đọc + validate dữ liệu (layer hiện có)
