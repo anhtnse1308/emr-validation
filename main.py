@@ -123,7 +123,7 @@ print("=" * 60)
 
 all_objects, _ = ExcelService.read_excel(excel_file)
 
-FileHelper.print_errors_console(all_objects)
+#FileHelper.print_errors_console(all_objects)
 
 summary_log    = FileHelper.write_log_summary(excel_file, all_objects)
 json_log       = FileHelper.write_log_json(excel_file, all_objects, suffix="errors")
