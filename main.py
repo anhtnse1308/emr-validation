@@ -11,8 +11,8 @@ import os
 # ===========================================================================
 # Đường dẫn file txt cố định
 # ===========================================================================
-PATH_TXT_BHYT    = r"C:\Users\Admin\Desktop\Also Recycle Bin\PATH_CHECK_XML.txt"
-PATH_TXT_BQP     = r"C:\Users\Admin\Desktop\Also Recycle Bin\PATH_CHECK_XML_BQP.txt"
+PATH_TXT_BHYT    = r".\PATH_CHECK_XML.txt"
+PATH_TXT_BQP     = r".\PATH_CHECK_XML_BQP.txt"
 
 
 def _doc_file_txt(path_txt: str) -> tuple[str, str]:
