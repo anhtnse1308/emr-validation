@@ -129,7 +129,7 @@ class DanhMucThuocLoader:
                 ten_hoat_chat = g("TEN_HOAT_CHAT"),
                 don_vi_tinh   = g("DON_VI_TINH"),
                 ham_luong     = g("HAM_LUONG"),
-                duong_dung    = g("DUONG_DUNG"),
+                duong_dung    = g("MA_DUONG_DUNG"),
                 ma_duong_dung = g("MA_DUONG_DUNG"),
                 dang_bao_che  = g("DANG_BAO_CHE"),
                 don_gia       = gf("DON_GIA"),
