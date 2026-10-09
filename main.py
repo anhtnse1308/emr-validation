@@ -11,15 +11,24 @@ import os
 # ===========================================================================
 # Đường dẫn file txt cố định
 # ===========================================================================
-PATH_TXT_BHYT    = r".\PATH_CHECK_XML.txt"
-PATH_TXT_BQP     = r".\PATH_CHECK_XML_BQP.txt"
+# Thư mục chứa file exe (hoặc script khi chạy .py trực tiếp)
+import sys as _sys
+_BASE_DIR = (
+    os.path.dirname(_sys.executable)   # khi đóng gói thành .exe
+    if getattr(_sys, "frozen", False)
+    else os.path.dirname(os.path.abspath(__file__))  # khi chạy .py
+)
+
+PATH_TXT_BHYT = os.path.join(_BASE_DIR, "PATH_CHECK_XML.txt")
+PATH_TXT_BQP  = os.path.join(_BASE_DIR, "PATH_CHECK_XML_BQP.txt")
 
 
-def _doc_file_txt(path_txt: str) -> tuple[str, str]:
+def _doc_file_txt(path_txt: str) -> tuple[str, str, str]:
     """
     Đọc file txt, trả về (danh_muc_file, excel_file).
     Dòng 1: đường dẫn file danh mục thuốc
-    Dòng 2: đường dẫn file Excel BHYT
+    Dòng 2: đường dẫn file danh mục DVKT MA_MAY
+    Dòng 3: đường dẫn file Excel BHYT
     """
     try:
         lines = open(path_txt, encoding="utf-8-sig").read().splitlines()
@@ -34,19 +43,26 @@ def _doc_file_txt(path_txt: str) -> tuple[str, str]:
         exit()
 
     danh_muc = lines[0]
-    excel    = lines[1]
+    danh_muc_may = lines[1] if len(lines) > 1 else ""
+    excel    = lines[2] if len(lines) > 2 else ""
+
+    if not excel:
+        print(f"❌ File txt thiếu dữ liệu (cần 3 dòng): {path_txt}")
+        exit()
 
     errors = []
-    if not os.path.exists(danh_muc):
-        errors.append(f"   Danh mục : {danh_muc}")
+    if danh_muc and not os.path.exists(danh_muc):
+        errors.append(f"   Danh mục thuốc : {danh_muc}")
+    if danh_muc_may and not os.path.exists(danh_muc_may):
+        errors.append(f"   Danh mục MA_MAY: {danh_muc_may}")
     if not os.path.exists(excel):
-        errors.append(f"   Excel    : {excel}")
+        errors.append(f"   Excel BHYT     : {excel}")
 
     if errors:
         print(f"❌ File không tồn tại:\n" + "\n".join(errors))
         exit()
 
-    return danh_muc, excel
+    return danh_muc, danh_muc_may, excel
 
 
 def _prompt_path(label: str, required: bool = True) -> str:
@@ -81,7 +97,7 @@ print("  CÔNG CỤ VALIDATE & GIÁM ĐỊNH XML BHYT")
 print("=" * 60)
 print()
 print("  Chọn nguồn file:")
-print("  [1] BHYT thường       (đọc từ PATH_CHECK_XML.txt)")
+print("  [1] BHYT thường        (đọc từ PATH_CHECK_XML.txt)")
 print("  [2] BHYT Quân đội/QP  (đọc từ PATH_CHECK_XML_BQP.txt)")
 print("  [3] Nhập tay")
 print()
@@ -94,13 +110,13 @@ while True:
 
     if chon == "1":
         print(f"\n  Đọc từ: {PATH_TXT_BHYT}")
-        danh_muc_file, excel_file = _doc_file_txt(PATH_TXT_BHYT)
+        danh_muc_file, _danh_muc_may_txt, excel_file = _doc_file_txt(PATH_TXT_BHYT)
         print(f"  Danh mục : {danh_muc_file}")
         print(f"  Excel    : {excel_file}")
         break
     elif chon == "2":
         print(f"\n  Đọc từ: {PATH_TXT_BQP}")
-        danh_muc_file, excel_file = _doc_file_txt(PATH_TXT_BQP)
+        danh_muc_file, _danh_muc_may_txt, excel_file = _doc_file_txt(PATH_TXT_BQP)
         print(f"  Danh mục : {danh_muc_file}")
         print(f"  Excel    : {excel_file}")
         break
@@ -123,7 +139,7 @@ print("=" * 60)
 
 all_objects, _ = ExcelService.read_excel(excel_file)
 
-#FileHelper.print_errors_console(all_objects)
+FileHelper.print_errors_console(all_objects)
 
 summary_log    = FileHelper.write_log_summary(excel_file, all_objects)
 json_log       = FileHelper.write_log_json(excel_file, all_objects, suffix="errors")
@@ -252,6 +268,43 @@ else:
 
 dt_excel = SangLocDoiTuong.write_excel(excel_file, dt_errors)
 print(f"\n✅ Excel đối tượng  : {dt_excel}")
+
+
+# ===========================================================================
+# 6. Kiểm tra MA_MAY theo danh mục DVKT yêu cầu khai báo máy
+# ===========================================================================
+print("\n" + "=" * 60)
+print("  6. KIỂM TRA MA_MAY DVKT")
+print("=" * 60)
+
+from giamdinh.rules.KiemTraMaMay import DanhMucMaMayLoader, KiemTraMaMay
+
+# Dùng từ file txt nếu có (option 1/2), fallback hỏi tay (option 3)
+_danh_muc_may_file = (
+    _danh_muc_may_txt
+    if "_danh_muc_may_txt" in dir() and _danh_muc_may_txt
+    else _prompt_path(
+        "Nhập file danh mục DVKT cần MA_MAY (Enter để bỏ qua)",
+        required=False,
+    )
+)
+
+if not _danh_muc_may_file:
+    print("⏭  Bỏ qua.")
+else:
+    print(f"Đang nạp danh mục: {_danh_muc_may_file} ...")
+    _loader_may = DanhMucMaMayLoader(_danh_muc_may_file)
+    print(f"  → {_loader_may}")
+
+    _mm_errors = KiemTraMaMay(_loader_may).check(all_objects)
+
+    if _mm_errors:
+        print(f"\n⚠️  Phát hiện {len(_mm_errors)} dòng DVKT thiếu MA_MAY.")
+    else:
+        print("\n✓ Tất cả DVKT yêu cầu MA_MAY đều đã khai báo.")
+
+    _mm_excel = KiemTraMaMay.write_excel(excel_file, _mm_errors)
+    print(f"\n✅ Excel MA_MAY       : {_mm_excel}")
 
 # ===========================================================================
 print("\n" + "=" * 60)

@@ -9,6 +9,7 @@ Các loại kiểm tra:
   T4 – DUONG_DUNG không khớp với danh mục                  → WARN.DM04
   T5 – HAM_LUONG không khớp với danh mục                   → WARN.DM05
   T6 – Thuốc hết hiệu lực tại thời điểm y lệnh             → WARN.DM06
+  T7 – MA_THUOC có ICD_REQ nhưng MA_BENH_CHINH không khớp    → WARN.DM07
 
 Dùng:
     from giamdinh.KiemTraThuocDanhMuc import KiemTraThuocDanhMuc
@@ -52,6 +53,15 @@ class KiemTraThuocDanhMuc(GiamDinhBase):
 
     def check(self, all_objects: dict) -> list[GiamDinhError]:
         errors: list[GiamDinhError] = []
+
+        # MA_LK → ma_benh_chinh (từ XML1)
+        xml1_map: dict[str, str] = {}
+        for _, rec1 in self._get_rows(all_objects, "XML1"):
+            ma_lk1 = (getattr(rec1, "MA_LK", None) or "").strip()
+            if ma_lk1:
+                xml1_map[ma_lk1] = (
+                    getattr(rec1, "MA_BENH_CHINH", "") or ""
+                ).strip().upper()
 
         for row_excel, rec in self._get_rows(all_objects, "XML2"):
             ma_lk      = (getattr(rec, "MA_LK",      None) or "").strip()
@@ -212,6 +222,35 @@ class KiemTraThuocDanhMuc(GiamDinhBase):
                         mo_ta=(
                             f"HAM_LUONG '{ham_luong}' không khớp với danh mục. "
                             f"Danh mục: {', '.join(sorted(dm_ham_luong)[:3])}."
+                        ),
+                        can_cu=CAN_CU,
+                        ma_dich_vu=ma_thuoc,
+                    ))
+
+            # ==============================================================
+            # T7 – ICD_REQ: MA_BENH_CHINH phải khớp tuyệt đối 1 trong các ICD yêu cầu
+            # ==============================================================
+            icd_req_raw = ";".join(
+                e.icd_req for e in working_entries
+                if getattr(e, "icd_req", "") and e.icd_req.strip()
+            )
+            if icd_req_raw:
+                # Tập ICD yêu cầu: split, trim, upper, bỏ rỗng
+                icd_req_set = {
+                    x.strip().upper()
+                    for x in icd_req_raw.split(";")
+                    if x.strip()
+                }
+                ma_benh_chinh = xml1_map.get(ma_lk, "")
+                if icd_req_set and ma_benh_chinh not in icd_req_set:
+                    errors.append(GiamDinhError(
+                        sheet="XML2", ma_lk=ma_lk, row_excel=row_excel,
+                        ma_ly_do="WARN.DM07",
+                        mo_ta=(
+                            f"Thuốc '{ma_thuoc}' yêu cầu MA_BENH_CHINH thuộc "
+                            f"{{{', '.join(sorted(icd_req_set))}}} "
+                            f"nhưng MA_BENH_CHINH='{ma_benh_chinh or '(trống)'}'. "
+                            f"So sánh tuyệt đối."
                         ),
                         can_cu=CAN_CU,
                         ma_dich_vu=ma_thuoc,

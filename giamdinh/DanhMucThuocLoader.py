@@ -56,6 +56,7 @@ class DrugEntry:
     ma_cskcb:     str
     loai_thuoc:   str   # "1"=hóa dược, "2"=YHCT
     loai_thau:    str   # "1"=TT, "2"=địa phương
+    icd_req:      str   # ICD yêu cầu, nhiều mã phân cách ";", "" = không yêu cầu
     row_index:    int   # dòng trong file gốc (để trace)
 
     def is_valid_on(self, ngay: str) -> bool:
@@ -120,7 +121,7 @@ class DanhMucThuocLoader:
                     return float(v) if v else None
                 except ValueError:
                     return None
-            """ DUONG_DUNG trong XML đang để mã chứ không để chữ """
+
             entry = DrugEntry(
                 ma_thuoc      = g("MA_THUOC"),
                 so_dang_ky    = g("SO_DANG_KY"),
@@ -128,7 +129,7 @@ class DanhMucThuocLoader:
                 ten_hoat_chat = g("TEN_HOAT_CHAT"),
                 don_vi_tinh   = g("DON_VI_TINH"),
                 ham_luong     = g("HAM_LUONG"),
-                duong_dung    = g("MA_DUONG_DUNG"),
+                duong_dung    = g("DUONG_DUNG"),
                 ma_duong_dung = g("MA_DUONG_DUNG"),
                 dang_bao_che  = g("DANG_BAO_CHE"),
                 don_gia       = gf("DON_GIA"),
@@ -140,6 +141,7 @@ class DanhMucThuocLoader:
                 ma_cskcb      = g("MA_CSKCB"),
                 loai_thuoc    = g("LOAI_THUOC"),
                 loai_thau     = g("LOAI_THAU"),
+                icd_req       = g("ICD_REQ"),
                 row_index     = row_num,
             )
             if not entry.ma_thuoc:
